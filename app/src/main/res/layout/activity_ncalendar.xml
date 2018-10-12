@@ -109,7 +109,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:firstDayOfWeek="Sunday"
-        app:pointColor="#000000"
+        app:pointColor="#38AE80"
         >
 
         <android.support.v7.widget.RecyclerView

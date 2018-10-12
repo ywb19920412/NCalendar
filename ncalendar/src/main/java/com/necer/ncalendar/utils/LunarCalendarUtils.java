@@ -2,6 +2,9 @@ package com.necer.ncalendar.utils;
 
 import android.text.TextUtils;
 
+import java.util.Calendar;
+import java.util.Date;
+
 /**
  * Created by Jimmy on 2017/1/9 0009.
  * 农历工具类
@@ -155,7 +158,39 @@ public class LunarCalendarUtils {
         }
         return message;
     }
+    private static String[] SolarTerm =
+            { "小寒", "大寒", "立春", "雨水", "惊蛰", "春分", "清明", "谷雨", "立夏", "小满", "芒种", "夏至",
+                    "小暑", "大暑", "立秋", "处暑", "白露", "秋分", "寒露", "霜降", "立冬", "小雪", "大雪",
+                    "冬至" };
+    private static long[] STermInfo = new long[] { 0, 21208, 42467, 63836, 85337, 107014, 128867, 150921, 173149, 195551,
+            218072, 240693, 263343, 285989, 308563, 331033, 353350, 375494, 397447, 419210, 440795, 462224, 483532,
+            504758 };
+    // ******************计算节气**********//
+    public static String getSolarTerms(int y,int m,int d){
+        String solarTerms="";
+        if (d == sTerm(y, m* 2)){
+            solarTerms = SolarTerm[m * 2];
+        }else if (d == sTerm(y, m * 2 + 1)){
+            solarTerms = SolarTerm[m * 2 + 1];
+        }else{
+            solarTerms = "";
+        }
+        return solarTerms;
+    }
 
+    // ===== 某年的第n个节气为几日(从0小寒起算)
+    private static int sTerm(int y, int n){
+        if (y == 2009 && n == 2) {
+            STermInfo[n] = 43467;
+        }
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(1900, 0, 6, 2, 5);
+        Date _1900 = calendar.getTime();
+        long millis = (long) ((31556925974.7 * (y - 1900) + STermInfo[n] * 60000) + _1900
+                .getTime());
+        calendar.setTimeInMillis(millis);
+        return calendar.get(Calendar.DATE);
+    }
     /**
      * 返回农历中文格式
      *
@@ -183,10 +218,9 @@ public class LunarCalendarUtils {
             relust = "";
         if (lunatDay == 10)
             relust = "初十";
-        else
+        else{
             relust = chineseTen[lunatDay / 10] + CHINESE_NUMBER[n];
-
-
+        }
         if (relust.equals("初一") && isLeap) {
             relust = "闰" + CHINESE_NUMBER[lunatMonth - 1] + "月";
         }
@@ -322,7 +356,16 @@ public class LunarCalendarUtils {
      * @return
      */
     public static String getHolidayFromSolar(int year, int month, int day) {
-        String message = "";
+        String message="";
+        if ("".equals(message)){
+            message=getMotherOrFatherDay(year,month+1,day);
+        }
+        if ("".equals(message)){
+            message=getThanksGivingDay(year,month+1,day);
+        }
+        if ("".equals(message)){
+            message=getSolarTerms(year,month,day);
+        }
         if (month == 0 && day == 1) {
             message = "元旦";
         } else if (month == 1 && day == 14) {
@@ -335,8 +378,11 @@ public class LunarCalendarUtils {
             message = "消费者";
         } else if (month == 3) {
             if (day == 1) {
-                message = "";
-            } else if (day >= 4 && day <= 6) {
+                message = "愚人节";
+            }else if (day==22){
+                message = "地球日";
+            }
+            else if (day >= 4 && day <= 6) {
                 if (year <= 1999) {
                     int compare = (int) (((year - 1900) * 0.2422 + 5.59) - ((year - 1900) / 4));
                     if (compare == day) {
@@ -363,9 +409,77 @@ public class LunarCalendarUtils {
             message = "教师节";
         } else if (month == 9 && day == 1) {
             message = "国庆节";
+        }else if (month == 9 && day == 31) {
+            message = "万圣节";
+        }else if (month == 10 && day == 11) {
+            message = "光棍节";
+        }else if (month == 11 && day == 24) {
+            message = "平安夜";
+        }else if (month == 11 && day == 25) {
+            message = "圣诞节";
         }
         return message;
     }
 
+    /**
+     * 根据公历获取母情节、父亲节
+     * @param year
+     * @param month
+     * @param day
+     * @return
+     */
+    private static String getMotherOrFatherDay(int year, int month, int day) {
+        if ( month != 5 && month != 6)
+            return "";
+        if ( (month == 5 && (day < 8 || day > 14)) ||(month == 6 && (day < 15 || day > 21)))
+            return "";
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(year, month - 1, 1);
+        int weekDate = calendar.get(Calendar.DAY_OF_WEEK);
+        weekDate = (weekDate == 1) ? 7 : weekDate - 1;
+        switch (month) {
+            case 5:
+                if (day == 15 - weekDate) {
+                    return "母亲节";
+                }
+                break;
+            case 6:
+                if (day == 22 - weekDate) {
+                    return "父亲节";
+                }
+                break;
+        }
+        return "";
+    }
 
+    /**
+     * 根据公历获取感恩节
+     * @param year
+     * @param month
+     * @param day
+     * @return
+     */
+    private static String getThanksGivingDay(int year, int month, int day){
+        if (month == 11){
+            Calendar calendar = Calendar.getInstance();
+            calendar.set(year, month - 1, 1);
+            int weekDate=calendar.get(Calendar.DAY_OF_WEEK);
+            weekDate = (weekDate == 1) ? 7 : weekDate - 1;
+            if (weekDate >= 5){
+                if(day==33-weekDate){
+                    return "感恩节";
+                }else {
+                    return "";
+                }
+            }else {
+                if (day== 26-weekDate){
+                    return "感恩节";
+                }else {
+                    return "";
+                }
+            }
+        }else {
+            return "";
+        }
+    }
 }
